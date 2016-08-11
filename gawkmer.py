@@ -112,8 +112,10 @@ def main():
     if file_format in ["fa", "fq"]:
         # check to see if valid fasta
         for line in open(input_file):
-            if line[0] != ">" or line[1] != "@":
-                raise IOError("The file does not appear to be valid fasta/fastq")
+            if line[0] != ">":
+                raise IOError("The file does not appear to be valid fasta")
+            elif line[0] != "@":
+                raise IOError("The file does not appear to be valid fastq")
             break
 
         for s in SeqIO.parse(input_file, sequence_format[file_format]):
