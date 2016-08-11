@@ -82,9 +82,9 @@ def main():
     except:
         raise ValueError("Failed to infer kmer size")
 
-    sys.stderr.write("{0}\tkmer size".format(kmer_size))
-    sys.stdout.write("# {0}\tkmer size".format(kmer_size))
-    sys.stdout.write("# {0}\tjellyfish database".format(kmer_size))
+    sys.stderr.write("{0}\tkmer size\n".format(kmer_size))
+    sys.stdout.write("# {0}\tkmer size\n".format(kmer_size))
+    sys.stdout.write("# {0}\tjellyfish database\n".format(jf_db))
 
     # support for bed file [hg19 coordinates]
     if file_format == "bed":
