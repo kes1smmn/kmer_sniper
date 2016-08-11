@@ -100,10 +100,11 @@ def main():
                         sys.stdout.write("{0},{1:.3f},{2:.3f},{3}\n".format(
                             "chr{0}:{1}-{2}".format(chromosome, start, end), score_1, score_2,
                             ",".join([str(i) for i in values])))
-                    elif verbose:
-                        sys.stdout.write("{0},{1:.3f},{2:.3f},{3}\n".format(
-                            "chr{0}:{1}-{2}".format(chromosome, start, end), score_1, score_2,
-                            ",".join([str(i) for i in values])))
+                    else:
+                        if verbose:
+                            sys.stdout.write("{0},{1:.3f},{2:.3f},{3}\n".format(
+                                "chr{0}:{1}-{2}".format(chromosome, start, end), score_1, score_2,
+                                ",".join([str(i) for i in values])))
                 else:
                     sys.stdout.write("{0},{1},{2},{3}\n".format("chr{0}:{1}-{2}".format(chromosome, start, end), "na",
                                                                 "na", ",".join(["na"])))
@@ -125,9 +126,12 @@ def main():
             if len(values) < numpy.sum(values):
                 sys.stdout.write("{0},{1:.3f},{2:.3f},{3}\n".format(s.name, score_1, score_2,
                                                                     ",".join([str(i) for i in values])))
-            elif verbose:
-                sys.stdout.write("{0},{1:.3f},{2:.3f},{3}\n".format(s.name, score_1, score_2,
+            else:
+                if verbose:
+                    sys.stdout.write("{0},{1:.3f},{2:.3f},{3}\n".format(s.name, score_1, score_2,
                                                                     ",".join([str(i) for i in values])))
+
+    return
 
 if __name__ == "__main__":
     main()
