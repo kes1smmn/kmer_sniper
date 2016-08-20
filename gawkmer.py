@@ -6,7 +6,10 @@ import numpy
 import requests
 import math
 
+VALID_CHROMOSOMES = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18",
+                    "19", "20", "21", "22", "X", "Y", "M"]
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def get_sequence(chromosome, start, end):
     """
     sends request to ucsc to pull the sequence from hg19
@@ -31,6 +34,7 @@ def get_sequence(chromosome, start, end):
     return sequence
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def query_kmers(sequence, kmer_size, qf,):
     """
     takes string (dna sequence) and returns an array containing the kmer counts in a jellyfish database
@@ -54,7 +58,7 @@ def query_kmers(sequence, kmer_size, qf,):
     non_unique_coverage = float(non_unique_kmers) / distinct_kmers
     return values, observational_rank_metric, non_unique_coverage
 
-
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def main():
     parser = argparse.ArgumentParser(prog="Returns kmer count of input sequences from jellyfish database",
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -89,24 +93,31 @@ def main():
     # support for bed file [hg19 coordinates]
     if file_format == "bed":
         for line in open(input_file):
-            if line[0] != "#":
-                line = line.strip().split("\t")
-                chromosome, start, end = line[0].replace("chr", ""), int(line[1]), int(line[2])
-                sequence = get_sequence(chromosome, start, end)
-                if len(sequence) >= kmer_size:
-                    values, score_1, score_2 = query_kmers(sequence, kmer_size, qf)
-                    if len(values) < numpy.sum(values):
+            if line[0] == "#":
+                continue
+
+            line = line.strip().split("\t")
+            chromosome = line[0].replace("chr", "").upper().replace("MT", "M")
+
+            if chromosome not in VALID_CHROMOSOMES:
+                continue
+            start, end = int(line[1]), int(line[2])
+            sequence = get_sequence(chromosome, start, end)
+
+            if len(sequence) >= kmer_size:
+                values, score_1, score_2 = query_kmers(sequence, kmer_size, qf)
+                if len(values) < numpy.sum(values):
+                    sys.stdout.write("{0},{1:.3f},{2:.3f},{3}\n".format(
+                        "chr{0}:{1}-{2}".format(chromosome, start, end), score_1, score_2,
+                        ",".join([str(i) for i in values])))
+                else:
+                    if verbose:
                         sys.stdout.write("{0},{1:.3f},{2:.3f},{3}\n".format(
                             "chr{0}:{1}-{2}".format(chromosome, start, end), score_1, score_2,
                             ",".join([str(i) for i in values])))
-                    else:
-                        if verbose:
-                            sys.stdout.write("{0},{1:.3f},{2:.3f},{3}\n".format(
-                                "chr{0}:{1}-{2}".format(chromosome, start, end), score_1, score_2,
-                                ",".join([str(i) for i in values])))
-                else:
-                    sys.stdout.write("{0},{1},{2},{3}\n".format("chr{0}:{1}-{2}".format(chromosome, start, end), "na",
-                                                                "na", ",".join(["na"])))
+            else:
+                sys.stdout.write("{0},{1},{2},{3}\n".format("chr{0}:{1}-{2}".format(chromosome, start, end), "na",
+                                                            "na", ",".join(["na"])))
 
     # support for fasta/fastq files
     if file_format in ["fa", "fq"]:
@@ -128,9 +139,9 @@ def main():
             else:
                 if verbose:
                     sys.stdout.write("{0},{1:.3f},{2:.3f},{3}\n".format(s.name, score_1, score_2,
-                                                                    ",".join([str(i) for i in values])))
-
+                                                                        ",".join([str(i) for i in values])))
     return
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 if __name__ == "__main__":
     main()
