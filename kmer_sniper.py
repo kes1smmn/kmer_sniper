@@ -6,10 +6,14 @@ import numpy
 import requests
 import math
 
-VALID_CHROMOSOMES = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18",
-                    "19", "20", "21", "22", "X", "Y", "M"]
+VALID_CHROMOSOMES = ["1", "2", "3", "4", "5", "6", "7", "8",
+                     "9", "10", "11", "12", "13", "14", "15",
+                     "16", "17", "18", "19", "20", "21", "22",
+                     "X", "Y", "M"]
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 def get_sequence(chromosome, start, end):
     """
     sends request to ucsc to pull the sequence from hg19
@@ -59,15 +63,23 @@ def query_kmers(sequence, kmer_size, qf,):
     return values, observational_rank_metric, non_unique_coverage
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 def main():
     parser = argparse.ArgumentParser(prog="Returns kmer count of input sequences from jellyfish database",
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-i", "--input_file", help="the input file", required=True, type=str)
     parser.add_argument("-f", "--file_format", help="Format of the input file [default=fa]",
                         choices={"bed", "fa", "fq"}, default="fa")
-    parser.add_argument("-db", "--jellyfish_database", help="the jf database", required=True, type=str)
+    parser.add_argument("-db", "--jellyfish_database", help="the jf database",
+                        default="/Users/331-SimmonkLPTP/Documents/data/kmer_analysis/genome_hg19_30.jf",
+                        type=str)
     parser.add_argument("-v", "--verbose", help="output sequence with only unique kmers too", default=False,
                         action='store_true')
+
+    parser.add_argument("-os", help="output sequence from bed coords; suppress all other output", default=False,
+                        action='store_true')
+
     args = parser.parse_args()
     input_file = args.input_file
     kmer_size = None
@@ -76,6 +88,8 @@ def main():
     file_format = args.file_format
     qf = jellyfish.QueryMerFile(jf_db)
     sequence_format = {"fa": "fasta", "fq": "fastq"}
+    output_sequence = args.os
+
 
     try:
         mf = jellyfish.ReadMerFile(jf_db)
@@ -86,9 +100,11 @@ def main():
     except:
         raise ValueError("Failed to infer kmer size")
 
+
     sys.stderr.write("{0}\tkmer size\n".format(kmer_size))
-    sys.stdout.write("# {0}\tkmer size\n".format(kmer_size))
-    sys.stdout.write("# {0}\tjellyfish database\n".format(jf_db))
+    if output_sequence is False:
+        sys.stdout.write("# {0}\tkmer size\n".format(kmer_size))
+        sys.stdout.write("# {0}\tjellyfish database\n".format(jf_db))
 
     # support for bed file [hg19 coordinates]
     if file_format == "bed":
@@ -97,27 +113,38 @@ def main():
                 continue
 
             line = line.strip().split("\t")
-            chromosome = line[0].replace("chr", "").upper().replace("MT", "M")
+            chromosome = line[0].replace("chr", "")
 
-            if chromosome not in VALID_CHROMOSOMES:
-                continue
+            if chromosome in ["MT", "M", "m", "mt"]:
+                chromosome = "M"
+            if chromosome in ["y"]:
+                chromosome = "Y"
+            if chromosome in "x":
+                chromosome = "X"
+
+            # if chromosome not in VALID_CHROMOSOMES:
+            #     continue
             start, end = int(line[1]), int(line[2])
             sequence = get_sequence(chromosome, start, end)
 
+            if output_sequence:
+                sys.stdout.write(">{0}\n{1}\n".format("chr{0}:{1}-{2}".format(chromosome, start, end), sequence))
+                continue
             if len(sequence) >= kmer_size:
                 values, score_1, score_2 = query_kmers(sequence, kmer_size, qf)
                 if len(values) < numpy.sum(values):
-                    sys.stdout.write("{0},{1:.3f},{2:.3f},{3}\n".format(
-                        "chr{0}:{1}-{2}".format(chromosome, start, end), score_1, score_2,
+
+                    sys.stdout.write("{0},{1},{2:.3f},{3:.3f},{4}\n".format(
+                        "chr{0}:{1}-{2}".format(chromosome, start, end), len(sequence), score_1, score_2,
                         ",".join([str(i) for i in values])))
                 else:
                     if verbose:
-                        sys.stdout.write("{0},{1:.3f},{2:.3f},{3}\n".format(
-                            "chr{0}:{1}-{2}".format(chromosome, start, end), score_1, score_2,
+                        sys.stdout.write("{0},{1},{2:.3f},{3:.3f},{4}\n".format(
+                            "chr{0}:{1}-{2}".format(chromosome, start, end), len(sequence), score_1, score_2,
                             ",".join([str(i) for i in values])))
             else:
-                sys.stdout.write("{0},{1},{2},{3}\n".format("chr{0}:{1}-{2}".format(chromosome, start, end), "na",
-                                                            "na", ",".join(["na"])))
+                sys.stdout.write("{0},{1},{2},{3},{4}\n".format("chr{0}:{1}-{2}".format(chromosome, start, end),
+                                                                len(sequence), "na", "na", ",".join(["na"])))
 
     # support for fasta/fastq files
     if file_format in ["fa", "fq"]:

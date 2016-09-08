@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(
-    name='gawkmer',
+    name='kmer_sniper',
     version='1.0',
     packages=[''],
     url='',

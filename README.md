@@ -1,8 +1,8 @@
-## gawkmer - a quick kmer inspector 
+## kmer_sniper - a quick kmer inspector 
 
 <hr>
 
-#### gawkmer takes input as fasta, fastq, or bed file [hg19] and returns the kmer counts for jellyfish database in a csv format.
+#### kmer_sniper takes input as fasta, fastq, or bed file [hg19] and returns the kmer counts for jellyfish database in a csv format.
 #### 
 
 
@@ -27,7 +27,7 @@
 
     ``` bash
     git clone
-    cd gawkmer
+    cd kmer_sniper
     python setup.py install
     ```
 
@@ -38,4 +38,3 @@ Output:
 <sequence_identifier>,<region_uniqueness_rank_score>,<percent_of_region_not_unique>,<kmer_1>,.,.,.,.,<kmer_[regions_size - kmer_size + 1]>
 ```
 
-region_uniqueness_rank_score = 
