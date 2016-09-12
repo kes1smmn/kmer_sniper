@@ -58,8 +58,14 @@ def query_kmers(sequence, kmer_size, qf,):
 
     distinct_kmers = len([v for v in values if v > 0])
     non_unique_kmers = len([v for v in values if v > 1])
-    observational_rank_metric = math.log10(float(numpy.sum(values)) / distinct_kmers)
-    non_unique_coverage = float(non_unique_kmers) / distinct_kmers
+
+    if distinct_kmers == 0: #non of the kmers were found in the database dont report values:
+        observational_rank_metric = "NA"
+        non_unique_coverage = "NA"
+    else:
+        observational_rank_metric = math.log10(float(numpy.sum(values)) / distinct_kmers)
+        non_unique_coverage = float(non_unique_kmers) / distinct_kmers
+
     return values, observational_rank_metric, non_unique_coverage
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
