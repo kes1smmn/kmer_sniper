@@ -50,6 +50,7 @@ def query_kmers(sequence, kmer_size, qf,):
     :return:
     """
     values = []
+    # print(sequence)
     for i in range(len(sequence) - kmer_size + 1):
         kmer = sequence[i:i + kmer_size]
         mer = jellyfish.MerDNA(str(kmer))
@@ -60,8 +61,8 @@ def query_kmers(sequence, kmer_size, qf,):
     non_unique_kmers = len([v for v in values if v > 1])
 
     if distinct_kmers == 0: #non of the kmers were found in the database dont report values:
-        observational_rank_metric = "NA"
-        non_unique_coverage = "NA"
+        observational_rank_metric = 0
+        non_unique_coverage = 0
     else:
         observational_rank_metric = math.log10(float(numpy.sum(values)) / distinct_kmers)
         non_unique_coverage = float(non_unique_kmers) / distinct_kmers
@@ -165,7 +166,9 @@ def main():
             break
 
         for s in SeqIO.parse(input_file, sequence_format[file_format]):
+            #  print(str(s))
             values, score_1, score_2 = query_kmers(str(s.seq), kmer_size, qf)
+
             if len(values) < numpy.sum(values):
                 sys.stdout.write("{0},{1:.3f},{2:.3f},{3}\n".format(s.name, score_1, score_2,
                                                                     ",".join([str(i) for i in values])))
