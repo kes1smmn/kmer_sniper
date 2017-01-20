@@ -6,7 +6,7 @@ setup(
     packages=[''],
     url='',
     license='',
-    install_requires=[ 'numpy', 'biopython', 'requests'],
+    install_requires=[ 'numpy', 'biopython', 'requests', 'pysam'],
     author='Keith Simmon',
     author_email='keith.simmon@aruplab.com',
     description='returns kmer counts for sequence regions'
