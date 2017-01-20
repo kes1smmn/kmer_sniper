@@ -5,6 +5,7 @@ import argparse
 import numpy
 import requests
 import math
+import pysam
 
 VALID_CHROMOSOMES = ["1", "2", "3", "4", "5", "6", "7", "8",
                      "9", "10", "11", "12", "13", "14", "15",
@@ -14,7 +15,7 @@ VALID_CHROMOSOMES = ["1", "2", "3", "4", "5", "6", "7", "8",
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-def get_sequence(chromosome, start, end):
+def get_sequence_ucsc(chromosome, start, end):
     """
     sends request to ucsc to pull the sequence from hg19
 
@@ -87,6 +88,8 @@ def main():
     parser.add_argument("-os", help="output sequence from bed coords; suppress all other output", default=False,
                         action='store_true')
 
+    parser.add_argument("-r", "--reference", help="Reference sequence for use with .BED file input")
+
     args = parser.parse_args()
     input_file = args.input_file
     kmer_size = None
@@ -115,6 +118,12 @@ def main():
 
     # support for bed file [hg19 coordinates]
     if file_format == "bed":
+
+        if args.reference:
+            ref_fasta = pysam.FastaFile(args.reference)
+        else:
+            ref_fasta = None
+
         for line in open(input_file):
             if line[0] == "#":
                 continue
@@ -132,7 +141,10 @@ def main():
             # if chromosome not in VALID_CHROMOSOMES:
             #     continue
             start, end = int(line[1]), int(line[2])
-            sequence = get_sequence(chromosome, start, end)
+            if ref_fasta:
+                sequence = ref_fasta.fetch(chromosome, start, end)
+            else:
+                sequence = get_sequence_ucsc(chromosome, start, end)
 
             if output_sequence:
                 sys.stdout.write(">{0}\n{1}\n".format("chr{0}:{1}-{2}".format(chromosome, start, end), sequence))
