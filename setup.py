@@ -1,9 +1,9 @@
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name='kmer_sniper',
     version='1.0',
-    packages=[''],
+    packages=[],
     url='',
     license='',
     install_requires=[ 'numpy', 'biopython', 'requests', 'pysam'],

@@ -10,7 +10,7 @@ import pysam
 VALID_CHROMOSOMES = ["1", "2", "3", "4", "5", "6", "7", "8",
                      "9", "10", "11", "12", "13", "14", "15",
                      "16", "17", "18", "19", "20", "21", "22",
-                     "X", "Y", "M"]
+                     "X", "Y", "M", "MT"]
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -61,7 +61,7 @@ def query_kmers(sequence, kmer_size, qf,):
     distinct_kmers = len([v for v in values if v > 0])
     non_unique_kmers = len([v for v in values if v > 1])
 
-    if distinct_kmers == 0: #non of the kmers were found in the database dont report values:
+    if distinct_kmers == 0:  # non of the kmers were found in the database don't report values:
         observational_rank_metric = 0
         non_unique_coverage = 0
     else:
@@ -80,7 +80,8 @@ def main():
     parser.add_argument("-f", "--file_format", help="Format of the input file [default=fa]",
                         choices={"bed", "fa", "fq"}, default="fa")
     parser.add_argument("-db", "--jellyfish_database", help="the jf database",
-                        default="/Users/331-SimmonkLPTP/Documents/data/kmer_analysis/genome_hg19_30.jf",
+                        default="/Users/331-SimmonkLPTP/Documents/Projects/ARUP/Probe_analysis/kmer_analysis/"
+                                "genome_hg19_30.jf",
                         type=str)
     parser.add_argument("-v", "--verbose", help="output sequence with only unique kmers too", default=False,
                         action='store_true')
@@ -100,7 +101,6 @@ def main():
     sequence_format = {"fa": "fasta", "fq": "fastq"}
     output_sequence = args.os
 
-
     try:
         mf = jellyfish.ReadMerFile(jf_db)
         for mer, count in mf:
@@ -109,7 +109,6 @@ def main():
         mf = None
     except:
         raise ValueError("Failed to infer kmer size")
-
 
     sys.stderr.write("{0}\tkmer size\n".format(kmer_size))
     if output_sequence is False:
