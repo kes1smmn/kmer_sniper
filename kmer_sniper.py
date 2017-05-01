@@ -163,7 +163,8 @@ def main():
     parser.add_argument("--bin", help="will bin the sequence reads if read has a kmer in the jf database",
                         default=False, action='store_true')
 
-    parser.add_argument("--bin_cutoff", help="The number of kmer required to bin a read", default=1, type=int)
+    parser.add_argument("-bc", "--bin_cutoff", help="The number of kmer required to bin a read", default=1, type=int)
+    parser.add_argument("-n", "--number_of_reads_to_bin", help="The number of reads to bin", default=None, type=int)
 
     args = parser.parse_args()
     input_file = args.input_file
@@ -175,6 +176,7 @@ def main():
     bin_cutoff = args.bin_cutoff
     sequence_format = {"fa": "fasta", "fq": "fastq"}
     output_sequence = args.os
+    number_of_reads_to_bin = args.number_of_reads_to_bin
 
 
     kmer_size = get_kmer_size(jf_db)
@@ -235,6 +237,7 @@ def main():
                                                                 len(sequence), "na", "na", ",".join(["na"])))
 
     # support for fasta/fastq files
+    binned_count = 0
     if file_format in ["fa", "fq"]:
         # check to see if valid fasta
         for line in open(input_file):
@@ -247,13 +250,16 @@ def main():
                     raise IOError("The file does not appear to be valid fastq")
             break
 
-        if file_format == "fq":
+        if file_format == "fq" and BIN:
             for name, seq, qual in readfq(open(input_file)):
-                if BIN:
-                    binned_read_sequence = bin_reads(str(seq), kmer_size, qf, bin_cutoff=bin_cutoff)
-                    if binned_read_sequence is not None:
-                        sys.stdout.write(">{0}\n{1}\n".format(name, binned_read_sequence))
-                    continue
+
+                binned_read_sequence = bin_reads(str(seq), kmer_size, qf, bin_cutoff=bin_cutoff)
+                if binned_read_sequence is not None:
+                    binned_count += 1
+                    sys.stdout.write(">{0}\n{1}\n".format(name, binned_read_sequence))
+
+                if binned_count is not None and binned_count >= number_of_reads_to_bin:
+                    break
 
         else:
             for s in SeqIO.parse(input_file, sequence_format[file_format]):
