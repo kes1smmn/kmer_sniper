@@ -8,8 +8,9 @@ import pkg_resources
 import jellyfish
 from kmer_sniper import get_kmer_size, query_kmers
 import sqlite3
-from os.path import join, expanduser
+from os.path import join, expanduser, isfile
 from intervaltree import IntervalTree
+
 
 conn = MongoARUP()
 db = conn.db.transcripts
@@ -21,9 +22,9 @@ gene_symbol_to_id = {}
 gene_id_to_symbol = {}
 
 base_path = expanduser("~/Documents/Projects/ARUP/psuedogene_comparsion/")
-db_path = join(base_path, "kmer_map_non_unique.sqlite3")
-kmer_db = sqlite3.connect(db_path)
-cur = kmer_db.cursor()
+#db_path = join(base_path, "kmer_map_non_unique.sqlite3")
+#kmer_db = sqlite3.connect(db_path)
+#cur = kmer_db.cursor()
 
 # load resource files
 for line in open(gene_info):
@@ -201,6 +202,7 @@ def arguments():
                         default="/Users/331-SimmonkLPTP/Documents/Projects/ARUP/Probe_analysis/kmer_analysis/"
                                 "genome_hg19_30_non_unique.jf",
                         type=str)
+    parser.add_argument("-km", "--kmer_map", required=True)
     parser.add_argument("-v", "--verbose", help="output sequence with only unique kmers too", default=False,
                         action='store_true')
     parser.add_argument("-db_contains_unique_kmer", default=False, action='store_true')
@@ -215,15 +217,18 @@ def main():
     verbose = args.verbose
     qf = jellyfish.QueryMerFile(jf_db)
     db_contains_unique_kmer = args.db_contains_unique_kmer
+    if isfile(args.kmer_map) == False:
+        raise FileNotFoundError("the sql map does not exist")
 
+
+    kmer_db = sqlite3.connect(args.kmer_map)
+    cur = kmer_db.cursor()
     kmer_size = get_kmer_size(jf_db)
-    sniper_objects = OrderedDict()
+    #sniper_objects = OrderedDict()
     for i, s in enumerate(fasta_file):
         kmer_profile, rank_score, pct_non_unique, kmer_list= query_kmers(str(s.seq), kmer_size, qf,
                                                                db_contains_unique_kmer=db_contains_unique_kmer,
                                                                return_non_unique_kmers=True)
-
-
 
         if i % 50 == 0:
             sys.stderr.write("\r{0} sequences analyzed".format(i))
